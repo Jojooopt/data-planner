@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<!--
+  💌 DATE PLANNER — web kencan ala pixel cat
+  ============================================================
+  CARA PAKAI:
+  1. Ganti nama di CONFIG bawah (namaAku & panggilanDia).
+  2. Buka file ini di browser (Chrome), tekan F11 fullscreen.
+  3. Rekam layar (HP/laptop) → tempel sound viral → upload TikTok.
+
+  Alur: PLEASE (mau jalan ga?) → DATE PLANNER (pilih tanggal & waktu)
+        → PESAN MANIS → TIKET KENCAN 🎟️
+-->
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>💌 Date Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#2b2b3a;
+    --pink:#ff8fb3;
+    --pink-dark:#f06292;
+    --rose:#eb3c5a;
+    --cream:#fff8ec;
+    --yellow:#ffd93d;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ height:100%; }
+  body{
+    font-family:'VT323', 'Courier New', monospace;
+    background:#ffd6e7;
+    background-image:
+      radial-gradient(#ffc2d9 2px, transparent 2.5px),
+      radial-gradient(#ffc2d9 2px, transparent 2.5px);
+    background-size:48px 48px;
+    background-position:0 0, 24px 24px;
+    color:var(--ink);
+    display:flex;
+    min-height:100dvh; padding:16px; overflow-y:auto;
+    user-select:none;
+  }
+  /* floating hearts background */
+  .float-heart{
+    position:fixed; bottom:-60px; font-size:28px; opacity:.55;
+    animation:floatUp linear infinite; pointer-events:none; z-index:0;
+  }
+  @keyframes floatUp{
+    to{ transform:translateY(-110vh) rotate(20deg); }
+  }
+
+  /* ===== pixel window ===== */
+  .window{
+    position:relative; z-index:1;
+    width:100%; max-width:430px; margin:auto;
+    background:var(--cream);
+    border:4px solid var(--ink);
+    box-shadow:8px 8px 0 var(--ink);
+  }
+  .titlebar{
+    background:var(--pink);
+    border-bottom:4px solid var(--ink);
+    padding:10px 12px;
+    display:flex; align-items:center; gap:8px;
+  }
+  .titlebar .dots{ display:flex; gap:6px; }
+  .titlebar .dots span{
+    width:12px; height:12px; border:2px solid var(--ink); border-radius:50%;
+    background:var(--cream);
+  }
+  .titlebar .dots span:nth-child(1){ background:var(--rose); }
+  .titlebar .dots span:nth-child(2){ background:var(--yellow); }
+  .titlebar h1{
+    font-family:'Press Start 2P', monospace;
+    font-size:13px; letter-spacing:1px; flex:1; text-align:center;
+    padding-right:48px;
+  }
+  .screen{ display:none; padding:26px 22px 30px; text-align:center; }
+  .screen.active{ display:block; animation:pop .25s steps(3); }
+  @keyframes pop{ from{ transform:scale(.96); } to{ transform:scale(1); } }
+
+  .question{
+    font-size:30px; line-height:1.25; margin:6px 0 4px;
+  }
+  .sub{ font-size:22px; color:#8a8aa3; margin-bottom:14px; }
+
+  #cat{
+    image-rendering:pixelated;
+    width:190px; height:auto;
+    margin:6px auto 2px; display:block;
+    animation:bob 2.4s ease-in-out infinite;
+  }
+  @keyframes bob{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-8px);} }
+
+  /* ===== buttons ===== */
+  .btn{
+    font-family:'Press Start 2P', monospace; font-size:14px;
+    background:var(--rose); color:#fff;
+    border:3px solid var(--ink);
+    box-shadow:4px 4px 0 var(--ink);
+    padding:14px 22px; cursor:pointer;
+    transition:transform .05s, box-shadow .05s;
+  }
+  .btn:active{ transform:translate(4px,4px); box-shadow:0 0 0 var(--ink); }
+  .btn.secondary{ background:#fff; color:var(--ink); }
+  .btn.go{ background:#4caf7d; }
+  .btn-row{ display:flex; gap:16px; justify-content:center; margin-top:18px; }
+
+  #ask-stage{ position:relative; min-height:120px; }
+
+  /* ===== form ===== */
+  label.lbl{ display:block; font-size:24px; margin:16px 0 8px; text-align:left; }
+  input[type="date"], textarea{
+    width:100%; font-family:'VT323', monospace; font-size:24px;
+    padding:10px 12px; border:3px solid var(--ink); background:#fff;
+    box-shadow:4px 4px 0 var(--ink); color:var(--ink); outline:none;
+  }
+  input[type="date"]:focus, textarea:focus{ background:#fff9db; }
+  textarea{ min-height:110px; resize:vertical; user-select:text; }
+  .time-grid{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:4px; }
+  .time-opt{
+    border:3px solid var(--ink); background:#fff; padding:10px 4px;
+    font-size:22px; cursor:pointer; box-shadow:4px 4px 0 var(--ink);
+    transition:transform .05s, box-shadow .05s;
+  }
+  .time-opt .ico{ font-size:30px; display:block; }
+  .time-opt.selected{ background:var(--yellow); transform:translate(2px,2px); box-shadow:2px 2px 0 var(--ink); }
+  .full{ width:100%; margin-top:22px; }
+
+  /* ===== ticket ===== */
+  .ticket{
+    background:#fff; border:4px solid var(--ink);
+    box-shadow:6px 6px 0 var(--ink);
+    margin-top:6px; text-align:center; overflow:hidden;
+  }
+  .ticket-head{
+    background:var(--ink); color:#fff;
+    font-family:'Press Start 2P', monospace; font-size:12px;
+    padding:12px; letter-spacing:1px;
+  }
+  .ticket-body{ padding:18px 16px 8px; }
+  .ticket-body .big{ font-size:34px; margin:4px 0; }
+  .ticket-body .row{ font-size:24px; margin:6px 0; }
+  .ticket-body .msg{
+    font-size:24px; background:#fff3f7; border:3px dashed var(--pink-dark);
+    padding:10px; margin:12px 0; word-break:break-word;
+  }
+  .ticket-divider{
+    border-top:4px dashed var(--ink); margin:10px 0; position:relative;
+  }
+  .barcode{
+    display:flex; align-items:stretch; justify-content:center; gap:2px;
+    height:56px; padding:0 18px 14px;
+  }
+  .barcode span{ background:var(--ink); display:block; }
+  .hint{ font-size:20px; color:#8a8aa3; margin-top:14px; }
+
+  /* heart burst particles */
+  .burst{
+    position:absolute; font-size:26px; pointer-events:none; z-index:5;
+    animation:burstUp 1s ease-out forwards;
+  }
+  @keyframes burstUp{
+    to{ transform:translateY(-140px) scale(1.4); opacity:0; }
+  }
+  #confetti{ position:fixed; inset:0; pointer-events:none; z-index:9; }
+</style>
+</head>
+<body>
+
+<canvas id="confetti"></canvas>
+
+<div class="window">
+  <div class="titlebar">
+    <div class="dots"><span></span><span></span><span></span></div>
+    <h1 id="bar-title">💌 PLEASE</h1>
+  </div>
+
+  <!-- SCREEN 1 : ajakan -->
+  <div class="screen active" id="s-ask">
+    <canvas id="cat" width="180" height="150"></canvas>
+    <p class="question" id="ask-text">Mau jalan-jalan<br>bareng aku ga? 🥺</p>
+    <div id="ask-stage">
+      <div class="btn-row" id="ask-btns">
+        <button class="btn secondary" id="btn-no">GAK 💔</button>
+        <button class="btn" id="btn-yes">MAU 💖</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 2 : date planner -->
+  <div class="screen" id="s-date">
+    <p class="question">DATE PLANNER 📅</p>
+    <p class="sub" id="date-sub">sayangku free? 💌<br>Pilih kapan kita kencan yuk~</p>
+    <label class="lbl" for="tgl">📆 Tanggalnya:</label>
+    <input type="date" id="tgl">
+    <label class="lbl">⏰ Maunya jam berapa?</label>
+    <div class="time-grid">
+      <div class="time-opt" data-v="Siang"><span class="ico">☀️</span>Siang</div>
+      <div class="time-opt" data-v="Sore"><span class="ico">🌤️</span>Sore</div>
+      <div class="time-opt" data-v="Malam"><span class="ico">🌙</span>Malam</div>
+    </div>
+    <button class="btn go full" id="btn-next-date">Lanjut ➜</button>
+  </div>
+
+  <!-- SCREEN 3 : pesan -->
+  <div class="screen" id="s-msg">
+    <p class="question">PESAN MANIS 💬</p>
+    <p class="sub" id="msg-sub">Ada pesan buat Irfan?</p>
+    <textarea id="pesan" placeholder="Tulis pesan manis di sini... 💕"></textarea>
+    <button class="btn full" id="btn-ticket">Bikin tiketnya 🎟️</button>
+  </div>
+
+  <!-- SCREEN 4 : tiket -->
+  <div class="screen" id="s-ticket">
+    <div class="ticket">
+      <div class="ticket-head">🎟️ TIKET KENCAN 💕</div>
+      <div class="ticket-body">
+        <p class="big">ADMIT ONE 💖</p>
+        <p class="row" id="t-date">—</p>
+        <p class="row" id="t-time">—</p>
+        <div class="msg" id="t-msg">—</div>
+        <p class="row" style="font-size:20px;color:#8a8aa3" id="t-names">—</p>
+      </div>
+      <div class="ticket-divider"></div>
+      <div class="barcode" id="barcode"></div>
+    </div>
+    <p class="hint">📸 Screenshot tiketnya, kirim ke dia~</p>
+    <button class="btn secondary full" id="btn-again">🔁 Ulangi</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   ✏️  GANTI DI SINI — cukup edit dua baris ini aja
+   ============================================================ */
+const CONFIG = {
+  namaAku: "Johan",        // namamu
+  panggilanDia: "sayangku"  // panggilan buat dia
+};
+/* ============================================================ */
+
+document.getElementById('ask-text').innerHTML =
+  `Mau jalan-jalan<br>bareng ${CONFIG.namaAku} ga? 🥺`;
+document.getElementById('date-sub').innerHTML =
+  `${CONFIG.panggilanDia} free? 💌<br>Pilih kapan kita kencan yuk~`;
+document.getElementById('msg-sub').textContent =
+  `Ada pesan buat ${CONFIG.namaAku}?`;
+
+/* ---------- kucing pixel ---------- */
+const CAT = [
+".......KK............KK.......",
+"......KWWK..........KWWK......",
+"......KWWK..........KWWK......",
+".....KWWWWK........KWWWWK.....",
+".....KWPWWK........KWWPWK.....",
+".....KWWWWKKKKKKKKKWWWWK......",
+"......KWWWWWWWWWWWWWWWWK......",
+"......KWWWWWWWWWWWWWWWWK......",
+"......KWKKWWWWWWWWWWKKWK......",
+"......KWKKWWWWWWWWWWKKWK......",
+"......KWWWWWWWWWWWWWWWWK......",
+".....KWWWWWWWWWWWWWWWWWWK.....",
+".....KWPPKWWWWWWWWWWKPPWK.....",
+".....KWWWWWWWKPPKWWWWWWWK.....",
+".....KWWWWWWWWKKWWWWWWWWK.....",
+"......KKKKKKKKKKKKKKKKKK......",
+".....KWWWWWWWWWWWWWWWWWWK.....",
+"....KWWWW...RR....RR.WWWWWK...",
+"....KWKWWWRRRR..RRRRWWWKWK....",
+"....KWKWWWRRRRRRRRRRWWWKWK....",
+"....KWKWWWRRRRRRRRRRWWWKWK....",
+"....KWWWW..RRRRRRRR.WWWWWK....",
+"....KWWWW...RRRRRR..WWWWWK....",
+".....KKKKK...RRRR...KKKKK.....",
+"..............RR..............",
+];
+(function drawCat(){
+  const cv = document.getElementById('cat'), s = 6;
+  cv.width = 30*s; cv.height = 25*s;
+  const ctx = cv.getContext('2d');
+  const C = {K:'#2b2b3a', W:'#ffffff', P:'#ffabcd', R:'#eb3c5a'};
+  CAT.forEach((row,y)=>{ [...row].forEach((ch,x)=>{
+    if(C[ch]){ ctx.fillStyle = C[ch]; ctx.fillRect(x*s, y*s, s, s); }
+  });});
+})();
+
+/* ---------- pindah screen ---------- */
+const TITLES = {'s-ask':'💌 PLEASE','s-date':'📅 DATE PLANNER','s-msg':'💬 PESAN MANIS','s-ticket':'🎟️ TIKET KENCAN'};
+function show(id){
+  document.querySelectorAll('.screen').forEach(el=>el.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.getElementById('bar-title').textContent = TITLES[id];
+  window.scrollTo(0,0);
+}
+
+/* ---------- tombol GAK yang kabur ---------- */
+const noBtn = document.getElementById('btn-no');
+const stage = document.getElementById('ask-stage');
+const askBtns = document.getElementById('ask-btns');
+const noTexts = ["GAK 💔","ehh 😅","kok gak 🥺","yakin? 🤨","gak bisa 😝","MAU aja gih 💖"];
+let dodges = 0, moved = false;
+function dodge(e){
+  if(e) e.preventDefault();
+  if(!moved){
+    moved = true;
+    const r = noBtn.getBoundingClientRect(), sr = stage.getBoundingClientRect();
+    noBtn.style.position = 'absolute';
+    noBtn.style.left = (r.left - sr.left) + 'px';
+    noBtn.style.top = (r.top - sr.top) + 'px';
+    noBtn.style.margin = '0';
+    askBtns.style.justifyContent = 'center';
+  }
+  const maxX = Math.max(0, stage.clientWidth - noBtn.offsetWidth);
+  const maxY = Math.max(0, stage.clientHeight - noBtn.offsetHeight);
+  noBtn.style.left = (Math.random()*maxX) + 'px';
+  noBtn.style.top = (Math.random()*maxY) + 'px';
+  dodges++;
+  noBtn.textContent = noTexts[Math.min(dodges, noTexts.length-1)];
+}
+noBtn.addEventListener('mouseover', ()=>dodge());
+noBtn.addEventListener('touchstart', dodge, {passive:false});
+noBtn.addEventListener('click', dodge);
+
+/* ---------- tombol MAU : hujan hati ---------- */
+document.getElementById('btn-yes').addEventListener('click', function(){
+  const r = this.getBoundingClientRect(), sr = stage.getBoundingClientRect();
+  for(let i=0;i<12;i++){
+    const h = document.createElement('span');
+    h.className = 'burst';
+    h.textContent = ['💖','💕','❤️','💗'][i%4];
+    h.style.left = (r.left - sr.left + Math.random()*r.width) + 'px';
+    h.style.top = (r.top - sr.top) + 'px';
+    h.style.animationDelay = (Math.random()*0.3) + 's';
+    stage.appendChild(h);
+    setTimeout(()=>h.remove(), 1400);
+  }
+  setTimeout(()=>show('s-date'), 650);
+});
+
+/* ---------- date planner ---------- */
+(function initDate(){
+  const d = new Date(), day = d.getDay();
+  const add = (6 - day + 7) % 7 || 7;      // Sabtu depan
+  d.setDate(d.getDate() + add);
+  const p = n => String(n).padStart(2,'0');
+  document.getElementById('tgl').value =
+    `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+})();
+let waktu = '';
+document.querySelectorAll('.time-opt').forEach(el=>{
+  el.addEventListener('click', ()=>{
+    document.querySelectorAll('.time-opt').forEach(o=>o.classList.remove('selected'));
+    el.classList.add('selected');
+    waktu = el.dataset.v;
+  });
+});
+document.getElementById('btn-next-date').addEventListener('click', ()=>{
+  const tgl = document.getElementById('tgl').value;
+  if(!tgl){ alert('Pilih tanggalnya dulu dong 🥺'); return; }
+  if(!waktu){ alert('Pilih Siang / Sore / Malam dulu~ ⏰'); return; }
+  show('s-msg');
+});
+
+/* ---------- tiket ---------- */
+document.getElementById('btn-ticket').addEventListener('click', ()=>{
+  const tglVal = document.getElementById('tgl').value;
+  const tgl = new Date(tglVal + 'T00:00:00')
+    .toLocaleDateString('id-ID',{weekday:'long', day:'numeric', month:'long', year:'numeric'});
+  const ico = {Siang:'☀️', Sore:'🌤️', Malam:'🌙'}[waktu];
+  const pesan = document.getElementById('pesan').value.trim() || '(rahasia 🤫)';
+  document.getElementById('t-date').textContent = '📆 ' + tgl;
+  document.getElementById('t-time').textContent = `${ico} ${waktu} hari`;
+  document.getElementById('t-msg').textContent = '"' + pesan + '"';
+  document.getElementById('t-names').textContent =
+    `${CONFIG.panggilanDia} 💕 ${CONFIG.namaAku}`;
+  // barcode acak
+  const bc = document.getElementById('barcode');
+  bc.innerHTML = '';
+  for(let i=0;i<34;i++){
+    const s = document.createElement('span');
+    s.style.width = (1 + Math.floor(Math.random()*4)) + 'px';
+    if(Math.random() < .18) s.style.background = 'transparent';
+    bc.appendChild(s);
+  }
+  show('s-ticket');
+  confetti();
+});
+document.getElementById('btn-again').addEventListener('click', ()=>show('s-ask'));
+
+/* ---------- confetti pixel ---------- */
+function confetti(){
+  const cv = document.getElementById('confetti');
+  cv.width = innerWidth; cv.height = innerHeight;
+  const ctx = cv.getContext('2d');
+  const cols = ['#eb3c5a','#ff8fb3','#ffd93d','#ffffff','#4caf7d'];
+  const ps = Array.from({length:140}, ()=>({
+    x: Math.random()*cv.width, y: -20 - Math.random()*cv.height*0.5,
+    s: 5 + Math.random()*7, c: cols[Math.floor(Math.random()*cols.length)],
+    v: 2 + Math.random()*3, ph: Math.random()*6.28
+  }));
+  let frames = 0;
+  (function tick(){
+    ctx.clearRect(0,0,cv.width,cv.height);
+    ps.forEach(p=>{
+      p.y += p.v; p.ph += .1; p.x += Math.sin(p.ph)*1.5;
+      ctx.fillStyle = p.c;
+      ctx.fillRect(p.x, p.y, p.s, p.s*Math.abs(Math.cos(p.ph))+.5);
+    });
+    if(++frames < 220) requestAnimationFrame(tick);
+    else ctx.clearRect(0,0,cv.width,cv.height);
+  })();
+}
+
+/* ---------- hati beterbangan di background ---------- */
+for(let i=0;i<10;i++){
+  const h = document.createElement('span');
+  h.className = 'float-heart';
+  h.textContent = ['💖','💕','🤍','💗'][i%4];
+  h.style.left = (Math.random()*100) + 'vw';
+  h.style.fontSize = (18 + Math.random()*26) + 'px';
+  h.style.animationDuration = (9 + Math.random()*10) + 's';
+  h.style.animationDelay = (Math.random()*10) + 's';
+  document.body.appendChild(h);
+}
+
+/* ?screen= untuk testing tiap layar */
+const q = new URLSearchParams(location.search).get('screen');
+if(q && document.getElementById('s-'+q)) show('s-'+q);
+</script>
+</body>
+</html>
