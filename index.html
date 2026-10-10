@@ -8,6 +8,7 @@
   3. Rekam layar (HP/laptop) → tempel sound viral → upload TikTok.
 
   Alur: PLEASE (mau jalan ga?) → DATE PLANNER (pilih tanggal & waktu)
+        → MAU KEMANA (pilih aktivitas) → NGINEP APA PULANG
         → PESAN MANIS → TIKET KENCAN 🎟️
 -->
 <html lang="id">
@@ -120,13 +121,13 @@
   input[type="date"]:focus, textarea:focus{ background:#fff9db; }
   textarea{ min-height:110px; resize:vertical; user-select:text; }
   .time-grid{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:4px; }
-  .time-opt{
+  .time-opt, .place-opt, .stay-opt{
     border:3px solid var(--ink); background:#fff; padding:10px 4px;
     font-size:22px; cursor:pointer; box-shadow:4px 4px 0 var(--ink);
     transition:transform .05s, box-shadow .05s;
   }
-  .time-opt .ico{ font-size:30px; display:block; }
-  .time-opt.selected{ background:var(--yellow); transform:translate(2px,2px); box-shadow:2px 2px 0 var(--ink); }
+  .time-opt .ico, .place-opt .ico, .stay-opt .ico{ font-size:30px; display:block; }
+  .time-opt.selected, .place-opt.selected, .stay-opt.selected{ background:var(--yellow); transform:translate(2px,2px); box-shadow:2px 2px 0 var(--ink); }
   .full{ width:100%; margin-top:22px; }
 
   /* ===== ticket ===== */
@@ -205,15 +206,42 @@
     <button class="btn go full" id="btn-next-date">Lanjut ➜</button>
   </div>
 
-  <!-- SCREEN 3 : pesan -->
+  <!-- SCREEN 3 : mau kemana -->
+  <div class="screen" id="s-place">
+    <p class="question">MAU KEMANA? 🗺️</p>
+    <p class="sub">Pilih aktivitas kencan kita~ 💕</p>
+    <div class="time-grid">
+      <div class="place-opt" data-v="Nonton bioskop"><span class="ico">🎬</span>Nonton</div>
+      <div class="place-opt" data-v="Makan bareng"><span class="ico">🍜</span>Makan</div>
+      <div class="place-opt" data-v="Ngopi santai"><span class="ico">☕</span>Ngopi</div>
+      <div class="place-opt" data-v="Piknik"><span class="ico">🌳</span>Piknik</div>
+      <div class="place-opt" data-v="Main bareng"><span class="ico">🎮</span>Main</div>
+      <div class="place-opt" data-v="Karaoke"><span class="ico">🎤</span>Karaoke</div>
+    </div>
+    <button class="btn go full" id="btn-next-place">Lanjut ➜</button>
+  </div>
+
+  <!-- SCREEN 4 : nginep apa pulang -->
+  <div class="screen" id="s-stay">
+    <p class="question">NGINEP APA PULANG? 🌙</p>
+    <p class="sub">Abis kencan, kita... 🤭</p>
+    <div class="time-grid">
+      <div class="stay-opt" data-v="Pulang"><span class="ico">🏠</span>Pulang</div>
+      <div class="stay-opt" data-v="Nginep 😏"><span class="ico">🏨</span>Nginep</div>
+      <div class="stay-opt" data-v="Terserah Johan 🤭"><span class="ico">🤫</span>Terserah</div>
+    </div>
+    <button class="btn go full" id="btn-next-stay">Lanjut ➜</button>
+  </div>
+
+  <!-- SCREEN 5 : pesan -->
   <div class="screen" id="s-msg">
     <p class="question">PESAN MANIS 💬</p>
-    <p class="sub" id="msg-sub">Ada pesan buat Irfan?</p>
+    <p class="sub" id="msg-sub">Ada pesan buat Johan?</p>
     <textarea id="pesan" placeholder="Tulis pesan manis di sini... 💕"></textarea>
     <button class="btn full" id="btn-ticket">Bikin tiketnya 🎟️</button>
   </div>
 
-  <!-- SCREEN 4 : tiket -->
+  <!-- SCREEN 6 : tiket -->
   <div class="screen" id="s-ticket">
     <div class="ticket">
       <div class="ticket-head">🎟️ TIKET KENCAN 💕</div>
@@ -221,6 +249,8 @@
         <p class="big">ADMIT ONE 💖</p>
         <p class="row" id="t-date">—</p>
         <p class="row" id="t-time">—</p>
+      <p class="row" id="t-place">—</p>
+      <p class="row" id="t-stay">—</p>
         <div class="msg" id="t-msg">—</div>
         <p class="row" style="font-size:20px;color:#8a8aa3" id="t-names">—</p>
       </div>
@@ -288,7 +318,7 @@ const CAT = [
 })();
 
 /* ---------- pindah screen ---------- */
-const TITLES = {'s-ask':'💌 PLEASE','s-date':'📅 DATE PLANNER','s-msg':'💬 PESAN MANIS','s-ticket':'🎟️ TIKET KENCAN'};
+const TITLES = {'s-ask':'💌 PLEASE','s-date':'📅 DATE PLANNER','s-place':'🗺️ MAU KEMANA','s-stay':'🌙 NGINEP/PULANG','s-msg':'💬 PESAN MANIS','s-ticket':'🎟️ TIKET KENCAN'};
 function show(id){
   document.querySelectorAll('.screen').forEach(el=>el.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -361,6 +391,34 @@ document.getElementById('btn-next-date').addEventListener('click', ()=>{
   const tgl = document.getElementById('tgl').value;
   if(!tgl){ alert('Pilih tanggalnya dulu dong 🥺'); return; }
   if(!waktu){ alert('Pilih Siang / Sore / Malam dulu~ ⏰'); return; }
+  show('s-place');
+});
+
+/* ---------- mau kemana ---------- */
+let tempat = '';
+document.querySelectorAll('.place-opt').forEach(el=>{
+  el.addEventListener('click', ()=>{
+    document.querySelectorAll('.place-opt').forEach(o=>o.classList.remove('selected'));
+    el.classList.add('selected');
+    tempat = el.dataset.v;
+  });
+});
+document.getElementById('btn-next-place').addEventListener('click', ()=>{
+  if(!tempat){ alert('Pilih mau kemana dulu dong 🗺️'); return; }
+  show('s-stay');
+});
+
+/* ---------- nginep apa pulang ---------- */
+let inap = '';
+document.querySelectorAll('.stay-opt').forEach(el=>{
+  el.addEventListener('click', ()=>{
+    document.querySelectorAll('.stay-opt').forEach(o=>o.classList.remove('selected'));
+    el.classList.add('selected');
+    inap = el.dataset.v;
+  });
+});
+document.getElementById('btn-next-stay').addEventListener('click', ()=>{
+  if(!inap){ alert('Pilih dulu dong, nginep apa pulang? 🌙'); return; }
   show('s-msg');
 });
 
@@ -373,6 +431,8 @@ document.getElementById('btn-ticket').addEventListener('click', ()=>{
   const pesan = document.getElementById('pesan').value.trim() || '(rahasia 🤫)';
   document.getElementById('t-date').textContent = '📆 ' + tgl;
   document.getElementById('t-time').textContent = `${ico} ${waktu} hari`;
+  document.getElementById('t-place').textContent = '📍 ' + tempat;
+  document.getElementById('t-stay').textContent = '🌙 ' + inap;
   document.getElementById('t-msg').textContent = '"' + pesan + '"';
   document.getElementById('t-names').textContent =
     `${CONFIG.panggilanDia} 💕 ${CONFIG.namaAku}`;
